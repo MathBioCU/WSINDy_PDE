@@ -21,10 +21,11 @@ clc;
 
 % Add white noise
 n = length(U_exact);
-U_obs = cell(n,1);
 dims = size(squeeze(U_exact{1}));
 dim = length(dims);
+
 if noise_ratio>0
+    U_obs = cell(n,1);
     stdvs = zeros(1,n);
     noise = cell(1,n);
     snr = zeros(1,n);
@@ -39,6 +40,8 @@ if noise_ratio>0
         U_obs{j} = U_exact{j} + noise{j};
         disp(['SNR=',num2str(snr(j))]); 
     end
+else
+    U_obs = U_exact;
 end
 
 % Identify PDE
