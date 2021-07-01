@@ -6,9 +6,9 @@
 %%%%%%%%%%%% For Paper, "Weak SINDy for Partial Differential Equations"
 %%%%%%%%%%%% by D. A. Messenger and D. M. Bortz
 
-function axi = tags2axi(axi_tags,lib_list)
+function true_nz_weights = tags2axi(true_nz_weight_tags,lib_list)
   m = size(lib_list,1);
-  axi = zeros(m,1);
-  [~,loc] = ismember(axi_tags(:,1:end-1),lib_list,'rows');
-  axi(loc) = axi_tags(:,end);
+  true_nz_weights = zeros(m,1);
+  [~,loc] = ismember(true_nz_weight_tags(:,1:end-1),lib_list,'rows');
+  true_nz_weights(loc) = true_nz_weight_tags(:,end);
 end

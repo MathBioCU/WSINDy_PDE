@@ -7,17 +7,31 @@
 %%%%%%%%%%%% For Paper, "Weak SINDy for Partial Differential Equations"
 %%%%%%%%%%%% by D. A. Messenger and D. M. Bortz
 
-function [pdx_list,tags_pde,lib_list,lhs_ind,axi] = get_lib_tags(n,dim,lhs,max_dx,max_dt,polys,trigs,use_cross_dx,use_all_pt,custom_remove,custom_add,axi_tags)
+function [tags_pde,lib_list,pdx_list,lhs_ind,true_nz_weights] = get_lib_tags(n,dim,lhs,max_dx,max_dt,polys,trigs,use_cross_dx,use_all_dt,custom_remove,custom_add,true_nz_weight_tags)
 
-if isempty(custom_remove)
-    custom_remove = ones(1,n+dim)*Inf;
+% if isempty(custom_remove)
+%     custom_remove = ones(1,n+dim)*Inf;
+% end
+
+[~,lib_list,pdx_list] = build_fcn_lib_tags(n,dim,max_dx,max_dt,polys,trigs,use_cross_dx,use_all_dt);
+if and(~isempty(lib_list),~use_all_dt)
+    lib_list = lib_list(or(~lib_list(:,end)>0,ismember(lib_list,lhs,'rows')),:);
 end
 
-[~,pdx_list,lib_list] = build_fcn_lib_tags(n,dim,max_dx,max_dt,polys,trigs,use_cross_dx,use_all_pt);
-lib_list = [lib_list;custom_add];
-[tags_pde,lib_list] = build_str_tags(lib_list,dim,n,custom_remove,use_all_pt,lhs);
+lib_list = unique([lib_list;custom_add],'rows');
 
-lhs_ind=zeros(size(lhs,1));
+inds = [];
+if iscell(custom_remove)
+    for j=1:length(custom_remove)
+        inds = unique([inds;custom_remove{j}(lib_list,lhs)]);
+    end
+    lib_list = lib_list(~ismember(1:size(lib_list,1),inds),:);
+elseif ~isempty(custom_remove)
+    lib_list = lib_list(~ismember(lib_list,custom_remove,'rows'),:);
+end
+[tags_pde,lib_list] = build_str_tags(lib_list,dim,n);
+
+lhs_ind=zeros(size(lhs,1),1);
 try
     for k=1:size(lhs,1)
         lhs_ind(k) = find(ismember(lib_list,lhs(k,:),'rows'));
@@ -26,21 +40,23 @@ catch
     disp('ERROR: LHS not computed')
     return
 end
-if ~isempty(axi_tags)
+if ~isempty(true_nz_weight_tags)
     num_eqs = size(lhs,1);
     try 
-        axi = zeros(size(lib_list,1)-1,num_eqs);
+        true_nz_weights = zeros(size(lib_list,1)-num_eqs,num_eqs);
         for k=1:num_eqs
-            axi_temp = tags2axi(axi_tags{k},lib_list);
-            axi(:,k) = axi_temp([1:lhs_ind(k)-1 lhs_ind(k)+1:end]);
+            axi_temp = tags2axi(true_nz_weight_tags{k},lib_list);
+            true_nz_weights(:,k) = axi_temp(~ismember(1:size(lib_list,1),lhs_ind));
         end
     catch
         u_input = input('True terms missing from library, proceed anyway?'); 
         if u_input~=1 
             return;
         else
-            axi = [];
+            true_nz_weights = [];
         end
     end
+else
+    true_nz_weights = [];
 end
 end

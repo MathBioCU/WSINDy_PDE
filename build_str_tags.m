@@ -6,17 +6,12 @@
 %%%%%%%%%%%% For Paper, "Weak SINDy for Partial Differential Equations"
 %%%%%%%%%%%% by D. A. Messenger and D. M. Bortz
 
-function [tags_pde,lib_list] = build_str_tags(lib_list,dim,n,custom_remove,use_all_pt,lhs)
+function [tags_pde,lib_list] = build_str_tags(lib_list,dim,n)
     tags_pde = {};
     ind = 1;
     remove_inds = zeros(size(lib_list,1),1);
     for j=1:size(lib_list)
         tags = lib_list(j,:);
-        if any(ismember(custom_remove,tags,'rows'))
-            remove_inds(j) = 1;
-        elseif all([use_all_pt == 0 tags(end)>0 ~any(ismember(lhs,tags,'rows'))])
-            remove_inds(j) = 1;
-        else
             if dim == 2
                 str_pdx = [repelem('x',tags(end-1)),repelem('t',tags(end))];
             elseif dim == 3
@@ -26,7 +21,13 @@ function [tags_pde,lib_list] = build_str_tags(lib_list,dim,n,custom_remove,use_a
             end
 
             if isreal(tags)
-                tags_pde{ind} = ['u^{', strrep(num2str(tags(1:n)),'  ',','),'}_{',str_pdx,'}'];
+                str_temp = '';
+                for nn=1:n-1
+                    str_temp = strcat(str_temp,strcat(strrep(num2str(tags(nn)),' ',''),','));
+                end
+                str_temp = strcat(str_temp,strrep(num2str(tags(n)),' ',''));
+                tags_pde{ind} = ['u^{',str_temp,'}_{',str_pdx,'}'];
+%                tags_pde{ind} = ['u^{', strrep(num2str(tags(1:n)),'  ',','),'}_{',str_pdx,'}'];
                 ind = ind+1;
             else
                 ind_symb = imag(tags(1:n));
@@ -39,7 +40,7 @@ function [tags_pde,lib_list] = build_str_tags(lib_list,dim,n,custom_remove,use_a
                     ind = ind+1;
                 end
             end
-        end
+%        end
     end
     lib_list = lib_list(~remove_inds,:);
 end    

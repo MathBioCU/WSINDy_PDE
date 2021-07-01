@@ -10,7 +10,7 @@
 %%%%%%%%%%%% utilizes 'partitions.m' by John D'Errico (e-mail:
 %%%%%%%%%%%% woodchips@rochester.rr.com, Release: 2, Release date: 7/15/08)
 
-function total_parts = partitionNk(N,k)
+function total_parts = partitionNk(N,k) 
     if N>1
         A = partitions(N,0:N,N,k);
         num_unique_parts = size(A,1);
