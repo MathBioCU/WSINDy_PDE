@@ -11,13 +11,13 @@
 
 %% Load data
 
-clc; 
-clear all; 
-close all;
+% clc; 
+% clear all; 
+% close all;
 
 pde_num = 1;
 pde_names = {'burgers.mat','KdV.mat','KS.mat','NLS.mat','Sine_Gordon.mat','rxn_diff.mat','Nav_Stokes.mat','porous.mat','AC_temp'};
-load(['datasets/',pde_names{pde_num}])
+% load(['datasets/',pde_names{pde_num}])
 
 %% Subsample data (if desired)
 
@@ -29,7 +29,6 @@ dim = length(dims);
 coarsen_data = [ones(dim,2) dims'];
 % coarsen_data(end,end) = floor(coarsen_data(end,end)/2); %%% uncomment to use only first 1/2 of timepoints
 [xs_obs,U_obs] = subsamp(xs_obs,U_obs,coarsen_data,dims);
-
 
 %% Add noise
 
