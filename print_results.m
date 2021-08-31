@@ -41,7 +41,7 @@ fprintf(filename,'%u ',[max_dt max_dx]);
 fprintf(filename,'\n[m_x m_t] = ');
 fprintf(filename,'%u ',[supp_phi_x supp_phi_t]);
 fprintf(filename,'\n[s_x s_t] = ');
-fprintf(filename,'%u ',diff([sub_inds{1}(1:2)' sub_inds{end}(1:2)']));
+fprintf(filename,'%u ',mean(diff([sub_inds{1}(:)' sub_inds{end}(:)'])));
 fprintf(filename,'\n[p_x p_t] = ');
 fprintf(filename,'%u ',[p_x p_t]) ;
 fprintf(filename,'\n scales = ');
