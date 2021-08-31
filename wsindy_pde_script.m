@@ -15,7 +15,7 @@ clc;
 clear all; 
 close all;
 
-pde_num = 9;
+pde_num = 1;
 pde_names = {'burgers.mat','KdV.mat','KS.mat','NLS.mat','Sine_Gordon.mat','rxn_diff.mat','Nav_Stokes.mat','porous.mat'};
 load(['datasets/',pde_names{pde_num}])
 
