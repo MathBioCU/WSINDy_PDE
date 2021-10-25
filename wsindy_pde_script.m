@@ -15,7 +15,7 @@ clc;
 clear all; 
 close all;
 
-pde_num = 1;
+pde_num = 3;
 pde_names = {'burgers.mat','KdV.mat','KS.mat','NLS.mat','Sine_Gordon.mat','rxn_diff.mat','Nav_Stokes.mat','porous.mat'};
 load(['datasets/',pde_names{pde_num}])
 
@@ -28,17 +28,17 @@ n = length(U_obs);
 %% Subsample data (if desired)
 
 coarsen_data = [ones(dim,2) dims']; 
-% coarsen_data(:,2) = 2;
+coarsen_data(:,2) = 3;
 %%% set row d to [i inc f] to subsample dth coordinate to start at index i,
 %%% end at index f, and skip every inc gridpoint. e.g:
-%%% coarsen_data(:,2) = 2; coarsens spatiotemporal grid by factor of 2 in each coordinate
+%%% coarsen_data(:,2) = 3; coarsens spatiotemporal grid by factor of 3 in each coordinate
 
 [xs_obs,U_obs] = subsamp(xs_obs,U_obs,coarsen_data,dims);
 dims = cellfun(@(x) length(x), xs_obs);
 
 %% Add noise
 
-sigma_NR = 0.5;
+sigma_NR = 0.25;
 noise_dist = 0; 
 noise_alg = 0;
 rng('shuffle');
@@ -53,24 +53,24 @@ rng(rng_seed);
 
 % m_x = min(10,floor((length(xs_obs{1})-1)/2));
 % m_t = min(10,floor((length(xs_obs{end})-1)/2));
-% s_x = max(floor(length(xs_obs{1})/25),1);
-% s_t = max(floor(length(xs_obs{end})/25),1);
-% phi_class = 1;
-% tau = 10^-10;
-% tauhat = 2; 
-% toggle_scale = 2;
+s_x = max(floor(length(xs_obs{1})/25),1);
+s_t = max(floor(length(xs_obs{end})/25),1);
+phi_class = 1;
+tau = 10^-10;
+tauhat = 2; 
+toggle_scale = 2;
 
 %---------------- model library
 
-% max_dx = 6;
-% max_dt = 1;
-% polys = 0:6;
-% trigs = [];
-% use_all_dt = 0;
-% use_cross_dx = 0;
-% 
-% custom_add = [];
-% custom_remove = [];
+max_dx = 6;
+max_dt = 1;
+polys = 0:6;
+trigs = [];
+use_all_dt = 0;
+use_cross_dx = 0;
+
+custom_add = [];
+custom_remove = [];
 
 %---------------- find test function hyperparams using Fourier spectrum of U
 
@@ -84,7 +84,7 @@ end
 
 %% Build Library
 
-[axi,tags_pde,lib_list,pdx_list,lhs_ind,Cfs_x,Cfs_t,dx,dt,p_x,p_t,sub_inds,scales,M_full,Theta_pdx] = wsindy_pde_fun(U_obs,xs,true_nz_weights,...
+[axi,tags_pde,lib_list,pdx_list,lhs_ind,Cfs_x,Cfs_t,dx,dt,p_x,p_t,sub_inds,scales,M_full,Theta_pdx] = wsindy_pde_fun(U_obs,xs_obs,true_nz_weights,...
     lhs,max_dx,max_dt,polys,trigs,custom_add,custom_remove,use_all_dt,use_cross_dx,...
     toggle_scale,m_x,m_t,s_x,s_t,tols,phi_class);
 
