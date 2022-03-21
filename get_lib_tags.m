@@ -51,6 +51,7 @@ if ~isempty(true_nz_weight_tags)
     catch
         u_input = input('True terms missing from library, proceed anyway?'); 
         if u_input~=1 
+            lib_list = [];
             return;
         else
             true_nz_weights = [];

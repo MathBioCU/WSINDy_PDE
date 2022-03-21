@@ -33,10 +33,10 @@ function [tags_pde,lib_list] = build_str_tags(lib_list,dim,n)
                 ind_symb = imag(tags(1:n));
                 symb = sum(ind_symb);
                 if symb>0
-                    tags_pde{ind} = ['cos(',num2str(abs(symb)),'u^{',strrep(num2str(ind_symb),'  ',','),'})_{',str_pdx,'}'];
+                    tags_pde{ind} = ['cos(',num2str(abs(symb)),'u^{',strrep(num2str(ind_symb~=0),'  ',','),'})_{',str_pdx,'}'];
                     ind = ind+1;
                 else
-                    tags_pde{ind} = ['sin(',num2str(abs(symb)),'u^{',strrep(num2str(abs(ind_symb)),'  ',','),'})_{',str_pdx,'}'];
+                    tags_pde{ind} = ['sin(',num2str(abs(symb)),'u^{',strrep(num2str(ind_symb~=0),'  ',','),'})_{',str_pdx,'}'];
                     ind = ind+1;
                 end
             end
