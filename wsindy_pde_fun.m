@@ -32,7 +32,7 @@ if length(toggle_scale) == 1
         if toggle_scale == 1
             scale_u_fcn = @(v) norm(v(:)/norm(v(:),1)^(1/max(polys)),max(polys))^(max(polys)/(max(polys)-1));
         elseif toggle_scale == 2
-            scale_u_fcn = @(v) norm(v(:)/norm(v(:),2)^(1/max(polys)),2*max(polys))^(max(polys)/(max(polys)-1));
+            scale_u_fcn = @(v) min(max(norm(v(:)/norm(v(:),2)^(1/max(polys)),2*max(polys))^(max(polys)/max(max(polys)-1,1)),eps),1/eps);
         elseif toggle_scale == Inf
             scale_u_fcn = @(v) norm(v,inf)/(10^(1/max(polys)));
         end

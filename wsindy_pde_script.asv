@@ -12,12 +12,15 @@
 %% Load data
 
 clc; 
-clear all; 
-close all;
+% clear all; 
+% close all;
 
 pde_num = 3;
-pde_names = {'burgers.mat','KdV.mat','KS.mat','NLS.mat','Sine_Gordon.mat','rxn_diff.mat','Nav_Stokes.mat','porous.mat'};
+pde_names = {'burgers.mat','KdV.mat','KS.mat','NLS.mat','Sine_Gordon.mat','rxn_diff.mat','Nav_Stokes.mat','porous.mat','bw'};
 load(['datasets/',pde_names{pde_num}])
+% load(['/home/danielmessenger/Dropbox/Boulder/research/data/WSINDy_PDE/datasets/',pde_names{pde_num}])
+
+%%
 
 U_obs = U_exact;
 xs_obs = xs;
@@ -27,18 +30,18 @@ n = length(U_obs);
 
 %% Subsample data (if desired)
 
-coarsen_data = [ones(dim,2) dims']; 
+coarsen_data = [ones(dim,2) dims'];
+coarsen_data(:,2) = 1;
 %%% set row d to [i inc f] to subsample dth coordinate to start at index i,
 %%% end at index f, and skip every inc gridpoint. e.g:
-%%% coarsen_data(1:dim-1,2) = 2; coarsens each spatial coordinate by factor of 2
-coarsen_data(:,2) = 3;
+%%% coarsen_data(:,2) = 3; coarsens spatiotemporal grid by factor of 3 in each coordinate
 
 [xs_obs,U_obs] = subsamp(xs_obs,U_obs,coarsen_data,dims);
 dims = cellfun(@(x) length(x), xs_obs);
 
 %% Add noise
 
-sigma_NR = 0.25;
+sigma_NR = 0.3;
 noise_dist = 0; 
 noise_alg = 0;
 rng('shuffle');
@@ -51,36 +54,44 @@ rng(rng_seed);
 
 %---------------- weak discretization
 
-% m_x = min(10,floor((length(xs_obs{1})-1)/2));
-% m_t = min(10,floor((length(xs_obs{end})-1)/2));
-s_x = max(floor(length(xs_obs{1})/25),1);
-s_t = max(floor(length(xs_obs{end})/25),1);
-phi_class = 1;
-tau = 10^-10;
-tauhat = 2; 
-toggle_scale = 2;
+phi_class = 1;          % piecewise poly = 1, Gaussian = 2
+
+s_x = 5;  %max(floor(length(xs_obs{1})/50),1);
+s_t = 4;  %max(floor(length(xs_obs{end})/50),1);
+
+m_x = 30;               % test function in x, 1/2 support in grid points 
+m_t = 30;               % test function in t, 1/2 support in grid points 
+p_x = 30;               % test function in x, poly degree
+p_t = 30;               % test function in t, poly degree
+
+tauhat = 2;             % if 0, set m_x,m_t,p_x,p_t manually; where tau = if 1, use cornerpoint
+tau = 10^-16;
+
+toggle_scale = 1;
 
 %---------------- model library
 
-max_dx = 6;
+max_dx = 5;
 max_dt = 1;
-polys = 0:6;
+polys = 0:5;
 trigs = [];
 use_all_dt = 0;
-use_cross_dx = 0;
+use_cross_dx = 1;
 
 custom_add = [];
 custom_remove = [];
+% lhs = [];
 
 %---------------- find test function hyperparams using Fourier spectrum of U
 
 if tauhat > 0
     tauhat_inds = 1:n;
-    [m_x,m_t,p_x,p_t,sig_est,corners_all] = findcorners(U_obs(tauhat_inds),xs_obs,tau,tauhat,max_dx,max_dt,phi_class);
-    tols = [-p_x -p_t];
+    [m_x,m_t,p_x,p_t,sig_est,corners_all] = findcorners(cellfun(@(x) x.^1, U_obs(tauhat_inds), 'uni',0),xs_obs,tau,tauhat,max_dx,max_dt,phi_class);
 else
-    tols = [tau tau];
+    m_x = min(m_x,floor((length(xs_obs{1})-1)/2));
+    m_t = min(m_t,floor((length(xs_obs{end})-1)/2));
 end
+tols = [-p_x -p_t];
 
 %% Build Library
 
@@ -91,62 +102,75 @@ end
 %% Solve Sparse Regression Problem
 
 %---------------- regularized least squares solve
-lambda = 10.^(linspace(-4,0,50));
-%lambda = [];
+lambda = 10.^(linspace(-4,0,100));
+% lambda = [];
 gamma = 0;
-maxits = 5;
-sparsity_scale = 0;                     % 0, enforce sparsity on original data; 1, enforce on rescaled data
+maxits = Inf;
+sparsity_scale = 1;                     % 0, enforce sparsity on original data; 1, enforce on rescaled data
 
 [W,G,b,resid,dW,its_all,thrs_EL,M,lambda_hat,lossvals,ET_wsindy,tags_pde_G,lib_list_G] = wsindy_pde_solve(lambda,gamma,Theta_pdx,lhs_ind,axi,M_full,maxits,tags_pde,lib_list,sparsity_scale);
 
-%% Display results
+%%
 
 print_loc = 1;
-toggle_plot_basis_fcn = 0; 
-toggle_plot_sol = 0; 
-toggle_plot_loss = 0; 
 
-if print_loc~=0
-    str_wsindy  = print_results(W,G,resid,dW,print_loc,dims,polys,trigs,max_dx,max_dt,lambda_hat,gamma,lhs_ind,tags_pde,m_x,m_t,p_x,p_t,sub_inds,scales,ET_wsindy,its_all,sigma_NR,sigma,axi);
-end
+toggle_plot_basis_fcn = 1;
+toggle_plot_sol =  1;
+toggle_plot_loss = 1;
+toggle_plot_fft = 1;
 
-if toggle_plot_basis_fcn
-    figure(1);
-    plot_basis_fcn(Cfs_x,Cfs_t,m_x,dx,m_t,dt,max_dx,max_dt,pdx_list,[1000 5 1400 700],scales(end-n:end));
-end
+get_results;
+display_results;
 
-if toggle_plot_sol>0
-    U = U_obs{1};
-    figure(2); set(gcf,'units','normalized','outerposition',[0.7 0.5 0.3 0.45])
-    set(gca, 'TickLabelInterpreter','latex','fontsize',14)
-    xlabel('$x$','interpreter','latex','fontsize',14)
-    ylabel('$t$','interpreter','latex','fontsize',14)
-    if dim==2
-        surf(1:length(xs_obs{1}),1:length(xs_obs{2}),U', 'EdgeColor','none')
-        colorbar
-        view([0 90])       
-        zlabel('$u$','interpreter','latex','fontsize',14)
-        set(gca, 'TickLabelInterpreter','latex','fontsize',14)
-    elseif dim==3
-        for j=1:toggle_plot_sol:length(xs_obs{3})
-            surf(xs_obs{1},xs_obs{2},U(:,:,j)', 'EdgeColor','none')
-            colorbar
-            view([0 90])       
-            caxis([min(U(:)) max(U(:))])
-            drawnow
-        end
-    end
-end
-
-if ~isempty(lossvals) && toggle_plot_loss
-    figure(3); set(gcf,'units','normalized','outerposition',[0.7 0.05 0.3 0.45])
-    loglog(lossvals(2,:),lossvals(1,:),'o-')
-    xlabel('$\lambda$','interpreter','latex','fontsize',14)
-    ylabel('$\mathcal{L}$','interpreter','latex','fontsize',14)
-    set(gca, 'TickLabelInterpreter','latex','fontsize',14)
-    xtick =10.^linspace(log10(lossvals(2,1)),log10(lossvals(2,end)),4);
-    xticks(xtick)
-    xticklb = num2str(log10(xtick)');
-    xticklabels(strcat('$10^{',xticklb(:,1:min(4,end)),'}$'))
-end
-
+% %% Display results
+% 
+% print_loc = 1;
+% toggle_plot_basis_fcn = 0; 
+% toggle_plot_sol = 0; 
+% toggle_plot_loss = 1; 
+% 
+% if print_loc~=0
+%     [str_wsindy,Tpr]  = print_results(W,G,resid,dW,print_loc,dims,polys,trigs,max_dx,max_dt,lambda_hat,gamma,lhs_ind,tags_pde,m_x,m_t,p_x,p_t,sub_inds,scales,ET_wsindy,its_all,sigma_NR,sigma,axi);
+% end
+% 
+% if toggle_plot_basis_fcn
+%     figure(1);
+%     plot_basis_fcn(Cfs_x,Cfs_t,m_x,dx,m_t,dt,max_dx,max_dt,pdx_list,[1000 5 1400 700],scales(end-n:end));
+% end
+% 
+% if toggle_plot_sol>0
+%     U = U_obs{1};
+%     figure(2); %set(gcf,'units','normalized','outerposition',[0.7 0.5 0.3 0.45])
+%     set(gca, 'TickLabelInterpreter','latex','fontsize',14)
+%     xlabel('$x$','interpreter','latex','fontsize',14)
+%     ylabel('$t$','interpreter','latex','fontsize',14)
+%     if dim==2
+%         surf(1:length(xs_obs{1}),1:length(xs_obs{2}),U', 'EdgeColor','none')
+%         colorbar
+%         view([0 90])       
+%         zlabel('$u$','interpreter','latex','fontsize',14)
+%         set(gca, 'TickLabelInterpreter','latex','fontsize',14)
+%     elseif dim==3
+%         for j=1:toggle_plot_sol:length(xs_obs{3})
+%             surf(xs_obs{1},xs_obs{2},U(:,:,j)', 'EdgeColor','none')
+%             zlim([0 max(U(:))])
+%             colormap(turbo)
+%             view([0 90])
+%             caxis([min(U(:)) max(U(:))])
+%             drawnow
+%         end
+%     end
+% end
+% 
+% if ~isempty(lossvals) && toggle_plot_loss
+%     figure(3); %set(gcf,'units','normalized','outerposition',[0.7 0.05 0.3 0.45])
+%     loglog(lossvals(2,:),lossvals(1,:),'o-')
+%     xlabel('$\lambda$','interpreter','latex','fontsize',14)
+%     ylabel('$\mathcal{L}$','interpreter','latex','fontsize',14)
+%     set(gca, 'TickLabelInterpreter','latex','fontsize',14)
+%     xtick =10.^linspace(log10(lossvals(2,1)),log10(lossvals(2,end)),4);
+%     xticks(xtick)
+%     xticklb = num2str(log10(xtick)');
+%     xticklabels(strcat('$10^{',xticklb(:,1:min(4,end)),'}$'))
+% end
+% 

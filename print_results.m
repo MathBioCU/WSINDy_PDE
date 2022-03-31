@@ -7,7 +7,7 @@
 %%%%%%%%%%%% For Paper, "Weak SINDy for Partial Differential Equations"
 %%%%%%%%%%%% by D. A. Messenger and D. M. Bortz
 
-function str_wsindy = print_results(W,G,resid,dW,filename,dims,polys,trigs,max_dx,max_dt,lambda_learned,gamma,lhs_ind,tags_pde,supp_phi_x,supp_phi_t,p_x,p_t,sub_inds,scales,ET_wsindy,its_all,noise_ratio,sigma,axi)
+function [str_wsindy,Tpr] = print_results(W,G,resid,dW,filename,dims,polys,trigs,max_dx,max_dt,lambda_learned,gamma,lhs_ind,tags_pde,supp_phi_x,supp_phi_t,p_x,p_t,sub_inds,scales,ET_wsindy,its_all,noise_ratio,sigma,axi)
 
 [m,n] = size(W);
 
@@ -27,8 +27,10 @@ for k=1:n
     end
 end
 if ~isempty(axi)
-    Tps = tpscore(W,axi);
-    fprintf(filename,'TP Score = %1.2f\n', Tps);
+    Tpr = tpscore(W,axi);
+    fprintf(filename,'TP Score = %1.2f\n', Tpr);
+else
+    Tpr=0;
 end
 
 fprintf(filename,'      \n');

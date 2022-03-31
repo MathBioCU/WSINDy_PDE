@@ -7,13 +7,12 @@
 %%%%%%%%%%%% by D. A. Messenger and D. M. Bortz
 
 function plot_basis_fcn(Cfs_x,Cfs_t,supp_phi_x,dx,supp_phi_t,dt,max_dx,max_dt,pdx_list,pos,scales)
-    if isempty(pos)
-        pos = [1200 300 800 700];
-    end
     if isempty(scales)
         scales = [1 1];
     end
-    set(gcf,'position',pos)
+    if ~isempty(pos)
+        set(gcf,'position',pos)
+    end
     nn= max_dx+max_dt+1;
     
     pdx_list = [pdx_list(2,:);pdx_list(1,:);pdx_list(3:end,:)];

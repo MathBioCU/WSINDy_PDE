@@ -49,7 +49,7 @@ if ~isempty(true_nz_weight_tags)
             true_nz_weights(:,k) = axi_temp(~ismember(1:size(lib_list,1),lhs_ind));
         end
     catch
-        u_input = input('True terms missing from library, proceed anyway?'); 
+        u_input = 1;%input('True terms missing from library, proceed anyway?'); 
         if u_input~=1 
             lib_list = [];
             return;

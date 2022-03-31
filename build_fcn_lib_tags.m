@@ -42,7 +42,7 @@ if and(use_cross_dx,use_all_dt)
 elseif and(use_cross_dx,~use_all_dt)
     inds_grid = cell(dim-1,1);
     for d=1:dim-1
-        inds_grid{d} = 1:max_dx;
+        inds_grid{d} = 1:max_dx+1;
     end
     [inds_grid{:}] = ndgrid(inds_grid{:});
 
