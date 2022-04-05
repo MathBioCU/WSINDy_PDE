@@ -13,13 +13,14 @@ end
 
 %% plot data
 
+if toggle_plot_sol>0
 for jj=1:min(length(toggle_plot_sol),length(U_obs))
     figind = figind +1;
     figure(figind); 
     colormap(turbo(50))
     if dim==2
         surf(xs_obs{1},xs_obs{2},U_obs{min(toggle_plot_sol(jj),length(U_obs))}', 'EdgeColor','none')
-        view([0 90])       
+%         view([0 90])       
         zlabel('$u$','interpreter','latex','fontsize',14)
         set(gca, 'TickLabelInterpreter','latex','fontsize',14)
         xlabel('$x$','interpreter','latex','fontsize',14)
@@ -29,7 +30,6 @@ for jj=1:min(length(toggle_plot_sol),length(U_obs))
         colorbar
         title(['U(',num2str(min(toggle_plot_sol(jj),length(U_obs))),')'])
     elseif dim==3
-        plotgap=1;
         for j=1:plotgap:floor(length(xs_obs{3}))
             for i=1:length(toggle_plot_sol)
                 subplot(length(toggle_plot_sol),1,i)
@@ -46,6 +46,7 @@ for jj=1:min(length(toggle_plot_sol),length(U_obs))
         end
     end
 end
+end 
 
 %% plot loss fcn (MSTLS)
 
@@ -94,7 +95,7 @@ if toggle_plot_fft>0
             Cfs_ffts=Cfs_ffts/max(Cfs_ffts);
             semilogy(ks,Cfs_ffts)
             if exist('corners','var')
-                k = corners{dd}(2);
+                k = corners{1}{dd}(2);
                 semilogy([-k k],Ufft(L+1-k)*[1 1],'o','markersize',12)
             end    
             hold off     

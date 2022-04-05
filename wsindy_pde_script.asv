@@ -15,12 +15,10 @@ clc;
 % clear all; 
 % close all;
 
-pde_num = 3;
+pde_num = 7;
 pde_names = {'burgers.mat','KdV.mat','KS.mat','NLS.mat','Sine_Gordon.mat','rxn_diff.mat','Nav_Stokes.mat','porous.mat','bw'};
-load(['datasets/',pde_names{pde_num}])
-% load(['/home/danielmessenger/Dropbox/Boulder/research/data/WSINDy_PDE/datasets/',pde_names{pde_num}])
-
-%%
+% load(['datasets/',pde_names{pde_num}])
+load(['/home/danielmessenger/Dropbox/Boulder/research/data/WSINDy_PDE/datasets/',pde_names{pde_num}])
 
 U_obs = U_exact;
 xs_obs = xs;
@@ -31,7 +29,7 @@ n = length(U_obs);
 %% Subsample data (if desired)
 
 coarsen_data = [ones(dim,2) dims'];
-coarsen_data(:,2) = 1;
+% coarsen_data(1:dim-1,2) = 2;
 %%% set row d to [i inc f] to subsample dth coordinate to start at index i,
 %%% end at index f, and skip every inc gridpoint. e.g:
 %%% coarsen_data(:,2) = 3; coarsens spatiotemporal grid by factor of 3 in each coordinate
@@ -56,37 +54,37 @@ rng(rng_seed);
 
 phi_class = 1;          % piecewise poly = 1, Gaussian = 2
 
-s_x = 5;  %max(floor(length(xs_obs{1})/50),1);
+s_x = 4;  %max(floor(length(xs_obs{1})/50),1);
 s_t = 4;  %max(floor(length(xs_obs{end})/50),1);
 
-m_x = 30;               % test function in x, 1/2 support in grid points 
-m_t = 30;               % test function in t, 1/2 support in grid points 
-p_x = 30;               % test function in x, poly degree
-p_t = 30;               % test function in t, poly degree
+% m_x = 10;               % test function in x, 1/2 support in grid points 
+% m_t = 10;               % test function in t, 1/2 support in grid points 
+% p_x = 4;               % test function in x, poly degree
+% p_t = 2;               % test function in t, poly degree
 
-tauhat = 2;             % if 0, set m_x,m_t,p_x,p_t manually; where tau = if 1, use cornerpoint
-tau = 10^-16;
+tauhat = 1;             % if 0, set m_x,m_t,p_x,p_t manually; where tau = if 1, use cornerpoint
+tau = 10^-10;
 
-toggle_scale = 1;
+toggle_scale = 2;
 
 %---------------- model library
 
-max_dx = 5;
+max_dx = 2;
 max_dt = 1;
-polys = 0:5;
+polys = 0:;
 trigs = [];
 use_all_dt = 0;
-use_cross_dx = 1;
+use_cross_dx = 0;
 
 custom_add = [];
-custom_remove = [];
+custom_remove = {@(mat,lhs) find(all([mat(:,3)==0 ~ismember(mat,lhs,'rows')],2))};
 % lhs = [];
 
 %---------------- find test function hyperparams using Fourier spectrum of U
 
 if tauhat > 0
     tauhat_inds = 1:n;
-    [m_x,m_t,p_x,p_t,sig_est,corners_all] = findcorners(cellfun(@(x) x.^1, U_obs(tauhat_inds), 'uni',0),xs_obs,tau,tauhat,max_dx,max_dt,phi_class);
+    [m_x,m_t,p_x,p_t,sig_est,corners] = findcorners(cellfun(@(x) x.^1, U_obs(tauhat_inds), 'uni',0),xs_obs,tau,tauhat,max_dx,max_dt,phi_class);
 else
     m_x = min(m_x,floor((length(xs_obs{1})-1)/2));
     m_t = min(m_t,floor((length(xs_obs{end})-1)/2));
@@ -102,11 +100,11 @@ tols = [-p_x -p_t];
 %% Solve Sparse Regression Problem
 
 %---------------- regularized least squares solve
-lambda = 10.^(linspace(-4,0,100));
+lambda = 10.^(linspace(-4,0,50));
 % lambda = [];
 gamma = 0;
 maxits = Inf;
-sparsity_scale = 1;                     % 0, enforce sparsity on original data; 1, enforce on rescaled data
+sparsity_scale = 0;                     % 0, enforce sparsity on original data; 1, enforce on rescaled data
 
 [W,G,b,resid,dW,its_all,thrs_EL,M,lambda_hat,lossvals,ET_wsindy,tags_pde_G,lib_list_G] = wsindy_pde_solve(lambda,gamma,Theta_pdx,lhs_ind,axi,M_full,maxits,tags_pde,lib_list,sparsity_scale);
 
@@ -115,7 +113,7 @@ sparsity_scale = 1;                     % 0, enforce sparsity on original data; 
 print_loc = 1;
 
 toggle_plot_basis_fcn = 1;
-toggle_plot_sol =  1;
+toggle_plot_sol =  0;
 toggle_plot_loss = 1;
 toggle_plot_fft = 1;
 
