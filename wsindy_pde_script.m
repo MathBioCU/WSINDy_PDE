@@ -11,11 +11,11 @@
 
 %% Load data
 
-clc; 
-% clear all; 
-% close all;
+clc;
+clear all;
+close all;
 
-pde_num = 3;
+pde_num = 4;
 pde_names = {'burgers.mat','KdV.mat','KS.mat','NLS.mat','Sine_Gordon.mat','rxn_diff.mat','Nav_Stokes.mat','porous.mat','bw'};
 dr = ['datasets/',pde_names{pde_num}];
 % dr = ['/home/danielmessenger/Dropbox/Boulder/research/data/WSINDy_PDE/datasets/',pde_names{pde_num}];
@@ -51,11 +51,11 @@ rng(rng_seed);
 
 %% set plots
 
-toggle_plot_basis_fcn = 0;
+toggle_plot_basis_fcn = 1;
 toggle_plot_sol =  0;
 plotgap = 3;
-toggle_plot_loss = 0;
-toggle_plot_fft = 0;
+toggle_plot_loss = 1;
+toggle_plot_fft = 1;
 
 %% Set hyperparameters 
 
@@ -64,8 +64,8 @@ toggle_plot_fft = 0;
 phi_class = 1;          
 
 %%% set convolution query point spacing:
-s_x = 5;  %max(floor(length(xs_obs{1})/50),1);
-s_t = 5;  %max(floor(length(xs_obs{end})/50),1);
+s_x = 4;  %max(floor(length(xs_obs{1})/50),1);
+s_t = 4;  %max(floor(length(xs_obs{end})/50),1);
 
 %%% set reference test function parameters using spectrum of data:
 tauhat = 2;      %%% if tauhat<=0, explicit vals for m_x,m_t,p_x,p_t used. 
@@ -81,16 +81,16 @@ p_t = 7;
 toggle_scale = 2;
 
 %---------------- model library
-max_dx = 6;
+max_dx = 4;
 max_dt = 1;
-polys = 0:6;
-trigs = [];
+polys = 0:3;
+trigs = [1];
 use_all_dt = 0;
 use_cross_dx = 0;
-custom_add = [];
+custom_add = [1i 0 0 0];
 custom_remove = {}; %{@(mat,lhs) find(all([mat(:,3)==0 ~ismember(mat,lhs,'rows')],2))};
 % lhs = [1 0 1];
-% true_nz_weights = [];
+% true_nz_weights = {};
 
 %% Build Linear System
 
