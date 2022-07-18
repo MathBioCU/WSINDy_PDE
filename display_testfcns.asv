@@ -34,12 +34,12 @@ for j=1:toggle_plot:floor(length(xs_obs{end}))
             t_ind = j;
             for k=1:length(Xcoordcell{j})
                 ind = find(Xcoordcell{j}(k)==xs_obs{1});
-                plot(xs_obs{1}(ind-m_x:ind+m_x),Cfs{1}{1}(1,:)/max(Cfs{1}{1}(1,:))*mean(abs(zlims))/2+zlims(1),'r-o');
+                plot(xs_obs{1}(1:2*m_x+1) + xs_obs{1}(max(mod(ind,length(xs_obs{1})),1))-xs_obs{1}(1),Cfs{1}{1}(1,:)/max(Cfs{1}{1}(1,:))*mean(abs(zlims))/2+zlims(1),'r-o');
             end
         else
             for k=1:length(Xcoordcell{t_ind})
                 ind = find(Xcoordcell{t_ind}(k)==xs_obs{1});
-                plot(xs_obs{1}(ind-m_x:ind+m_x),Cfs{1}{1}(1,:)/max(Cfs{1}{1}(1,:))*mean(abs(zlims))/2+zlims(1),'r-o');
+                plot(xs_obs{1}(1:2*m_x+1) + xs_obs{1}(max(mod(ind,length(xs_obs{1})),1))-xs_obs{1}(1),Cfs{1}{1}(1,:)/max(Cfs{1}{1}(1,:))*mean(abs(zlims))/2+zlims(1),'r-o');
             end
         end
         hold off
