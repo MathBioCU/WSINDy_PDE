@@ -47,7 +47,7 @@ coarsen_data = repmat([0 1 1],dim,1);
 %%% skip every inc gridpoint.
 
 coarsen_data(1,:) = [0 8 1];  % every 8th point in x
-coarsen_data(2,:) = [0.5 2 1]; % start 50% of the way through time series, take every other point in time
+coarsen_data(2,:) = [0.5 2 0.95]; % start 50% of the way through time series, take every other point in time, end 95% of the way through
 
 [xs_obs,U_obs] = subsamp(xs_obs,U_obs,coarsen_data,dims);
 dims = cellfun(@(x) length(x), xs_obs);
