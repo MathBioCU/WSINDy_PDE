@@ -12,11 +12,11 @@
 %% Load data
 
 clc;
-% close all;
-% clear all;
+close all;
+clear all;
 
-pde_num = 4;
-pde_names = {'burgers.mat','KdV.mat','KS.mat','NLS.mat','Sine_Gordon.mat','rxn_diff.mat','Nav_Stokes.mat','porous.mat','bw'};
+pde_num = 9;
+pde_names = {'burgers.mat','KdV.mat','KS.mat','NLS.mat','Sine_Gordon.mat','rxn_diff.mat','Nav_Stokes.mat','porous.mat','sod.mat'};
 dr = ['datasets/',pde_names{pde_num}];
 % dr = ['/home/danielmessenger/Dropbox/Boulder/research/data/WSINDy_PDE/datasets/',pde_names{pde_num}];
 
@@ -25,6 +25,12 @@ try
     xs_obs = xs;
 catch
     load(dr,'U_exact','xs','lhs','true_nz_weights')
+    U_obs = U_exact;
+    xs_obs = xs;
+
+    eq = 2;
+    lhs = lhs(eq,:);
+    true_nz_weights = true_nz_weights(eq);
 end
 
 dims = size(U_obs{1});
@@ -40,8 +46,8 @@ coarsen_data = repmat([0 1 1],dim,1);
 %%% end at index final_frac*L,
 %%% skip every inc gridpoint.
 
-coarsen_data(1,2) = 4;  % every 4th point in x
-coarsen_data(2,1) = 0.1; % start 10% of the way through time series
+coarsen_data(1,:) = [0 8 1];  % every 8th point in x
+coarsen_data(2,:) = [0.5 2 1]; % start 50% of the way through time series, take every other point in time
 
 [xs_obs,U_obs] = subsamp(xs_obs,U_obs,coarsen_data,dims);
 dims = cellfun(@(x) length(x), xs_obs);
@@ -64,15 +70,15 @@ rng(rng_seed);
 phi_class = 1;          
 
 %%% set convolution query point spacing:
-s_x = 4;  %max(floor(length(xs_obs{1})/50),1);
-s_t = 4;  %max(floor(length(xs_obs{end})/50),1);
+s_x = 3;  %max(floor(length(xs_obs{1})/50),1);
+s_t = 3;  %max(floor(length(xs_obs{end})/50),1);
 
 %%% set reference test function parameters using spectrum of data:
-tauhat = 3;      %%% if tauhat<=0, explicit vals for m_x,m_t,p_x,p_t used. 
+tauhat = 0;      %%% if tauhat<=0, explicit vals for m_x,m_t,p_x,p_t used. 
 tau = 10^-10;
 
 %%% set reference test function parameters explicitly:
-m_x = 30;
+m_x = 15;
 m_t = 15;
 p_x = 5;
 p_t = 5;
@@ -89,7 +95,7 @@ use_all_dt = 0;
 use_cross_dx = 0;
 custom_add = [];
 custom_remove = {@(mat) mat(:,3)>1};
-% lhs = [1 0 1];
+% lhs = [1 1 0 0 1];
 % true_nz_weights = {};
 
 %% set plots
