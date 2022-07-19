@@ -12,8 +12,8 @@
 %% Load data
 
 clc;
-% close all;
-% clear all;
+clear all;
+close all;
 
 pde_num = 4;
 pde_names = {'burgers.mat','KdV.mat','KS.mat','NLS.mat','Sine_Gordon.mat','rxn_diff.mat','Nav_Stokes.mat','porous.mat','bw'};
@@ -32,16 +32,14 @@ dim = length(dims);
 n = length(U_obs);
 
 %% Subsample data (if desired)
+%%% set row d of coarsen_data to [initial_frac inc final_frac] to subsample dth coordinate to 
+%%% start at index initial_frac*L,
+%%% end at index final_frac*L, 
+%%% skip every inc gridpoint. e.g:
 
 coarsen_data = repmat([0 1 1],dim,1);
-
-%%% set row d of coarsen_data to [initial_frac inc final_frac] to subsample dth coordinate to 
-%%% start at index initial_frac*L, where L is the number of points in dth coordinate
-%%% end at index final_frac*L,
-%%% skip every inc gridpoint.
-
-coarsen_data(1,2) = 4;  % every 4th point in x
-coarsen_data(2,1) = 0.1; % start 10% of the way through time series
+coarsen_data(1,2) = 4;
+coarsen_data(2,1) = 0.1;
 
 [xs_obs,U_obs] = subsamp(xs_obs,U_obs,coarsen_data,dims);
 dims = cellfun(@(x) length(x), xs_obs);
@@ -57,6 +55,14 @@ rng_seed = rng().Seed;
 rng(rng_seed);
 [U_obs,noise,snr,sigma] = gen_noise(U_obs,sigma_NR,noise_dist,noise_alg,rng_seed,0);
 
+%% set plots
+
+toggle_plot_basis_fcn = 0;
+toggle_plot_sol =  1;
+plotgap = 3;
+toggle_plot_loss = 1;
+toggle_plot_fft = 1;
+
 %% Set hyperparameters 
 
 %---------------- weak discretization
@@ -64,11 +70,11 @@ rng(rng_seed);
 phi_class = 1;          
 
 %%% set convolution query point spacing:
-s_x = 4;  %max(floor(length(xs_obs{1})/50),1);
-s_t = 4;  %max(floor(length(xs_obs{end})/50),1);
+s_x = 6;  %max(floor(length(xs_obs{1})/50),1);
+s_t = 3;  %max(floor(length(xs_obs{end})/50),1);
 
 %%% set reference test function parameters using spectrum of data:
-tauhat = 3;      %%% if tauhat<=0, explicit vals for m_x,m_t,p_x,p_t used. 
+tauhat = 0;      %%% if tauhat<=0, explicit vals for m_x,m_t,p_x,p_t used. 
 tau = 10^-10;
 
 %%% set reference test function parameters explicitly:
@@ -83,22 +89,14 @@ toggle_scale = 2;
 %---------------- model library
 max_dx = 1;
 max_dt = 1;
-polys = [0:3];
+polys = 0:3;
 trigs = [];
 use_all_dt = 0;
 use_cross_dx = 0;
 custom_add = [];
-custom_remove = {@(mat) mat(:,3)>1};
+custom_remove = {@(mat) mat(:,3)>1}; %{@(mat,lhs) find(all([mat(:,3)==0 ~ismember(mat,lhs,'rows')],2))};
 % lhs = [1 0 1];
 % true_nz_weights = {};
-
-%% set plots
-
-toggle_plot_basis_fcn = 0;
-toggle_plot_sol =  0;
-plotgap = 0;
-toggle_plot_loss = 1;
-toggle_plot_fft = 0;
 
 %% Build Linear System
 
@@ -119,12 +117,12 @@ tols = [-p_x -p_t];
 
 %% Solve Sparse Regression Problem
 
-lambda = 10.^(linspace(-4,0,100));
+lambda = 10.^(linspace(-4,0,50));
 gamma = 0;
 maxits = Inf;
 
 %%% sparsity_scale =  0 enforces sparsity on original data; = 1 enforces on rescaled data
-sparsity_scale = 0;             
+sparsity_scale = 0;                     
 
 [W,G,b,resid,dW,its_all,thrs_EL,M,lambda_hat,lossvals,ET_wsindy,tags_pde_G,lib_list_G] = wsindy_pde_solve(lambda,gamma,Theta_pdx,lhs_ind,axi,M_full,maxits,tags_pde,lib_list,sparsity_scale);
 

@@ -21,13 +21,13 @@ end
 lib_list = unique([lib_list;custom_add],'rows');
 
 inds = [];
-if iscell(custom_remove)
-    for j=1:length(custom_remove)
-        inds = unique([inds;custom_remove{j}(lib_list,lhs)]);
+for i=1:length(custom_remove)
+    if isequal(class(custom_remove{i}),'function_handle')
+        inds = unique(find(all([custom_remove{i}(lib_list) ~ismember(lib_list,lhs,'rows')],2)));
+        lib_list = lib_list(~ismember(1:size(lib_list,1),inds),:);
+    elseif isequal(class(custom_remove{i}),'double')
+        lib_list = lib_list(~ismember(lib_list,custom_remove{i},'rows'),:);
     end
-    lib_list = lib_list(~ismember(1:size(lib_list,1),inds),:);
-elseif ~isempty(custom_remove)
-    lib_list = lib_list(~ismember(lib_list,custom_remove,'rows'),:);
 end
 [tags_pde,lib_list] = build_str_tags(lib_list,dim,n);
 
