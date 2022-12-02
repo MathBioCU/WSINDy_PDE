@@ -12,25 +12,28 @@
 %% Load data
 
 clc;
-close all;
+% close all;
 clear all;
 
-pde_num = 9;
+pde_num = 8;
 pde_names = {'burgers.mat','KdV.mat','KS.mat','NLS.mat','Sine_Gordon.mat','rxn_diff.mat','Nav_Stokes.mat','porous.mat','sod.mat'};
 dr = ['datasets/',pde_names{pde_num}];
 % dr = ['/home/danielmessenger/Dropbox/Boulder/research/data/WSINDy_PDE/datasets/',pde_names{pde_num}];
 
 try
+    %%% don't reload data if already loaded
     U_obs = U_exact;
     xs_obs = xs;
 catch
-    load(dr,'U_exact','xs','lhs','true_nz_weights')
+    load(dr);%,'U_exact','xs','lhs','true_nz_weights')
     U_obs = U_exact;
     xs_obs = xs;
 
-    eq = 2;
-    lhs = lhs(eq,:);
-    true_nz_weights = true_nz_weights(eq);
+    %%% select subset of equations
+    eq = 1:length(U_obs);
+    lhs = lhs(unique(min(eq,end)),:);
+    true_nz_weights = true_nz_weights(unique(min(eq,end)));
+    use_presets = 1;
 end
 
 dims = size(U_obs{1});
@@ -46,15 +49,15 @@ coarsen_data = repmat([0 1 1],dim,1);
 %%% end at index final_frac*L,
 %%% skip every inc gridpoint.
 
-coarsen_data(1,:) = [0 8 1];  % every 8th point in x
-coarsen_data(2,:) = [0.5 2 0.95]; % start 50% of the way through time series, take every other point in time, end 95% of the way through
+% coarsen_data(1:dim-1,:) = repmat([0 3 1],dim-1,1);  % every 3rd point in x
+% coarsen_data(end,:) = [0.5 1 0.95]; % start 50% of the way through time series, take every other point in time, end 95% of the way through
 
 [xs_obs,U_obs] = subsamp(xs_obs,U_obs,coarsen_data,dims);
 dims = cellfun(@(x) length(x), xs_obs);
 
 %% Add noise
 
-sigma_NR = 0;
+sigma_NR = 0.2;
 noise_dist = 0; 
 noise_alg = 0;
 rng('shuffle');
@@ -65,46 +68,40 @@ rng(rng_seed);
 
 %% Set hyperparameters 
 
-%---------------- weak discretization
-%%% phi_class = 1 for piecewise polynomial test function, 2 for Gaussian
-phi_class = 1;          
-
-%%% set convolution query point spacing:
-s_x = 3;  %max(floor(length(xs_obs{1})/50),1);
-s_t = 3;  %max(floor(length(xs_obs{end})/50),1);
-
-%%% set reference test function parameters using spectrum of data:
-tauhat = 0;      %%% if tauhat<=0, explicit vals for m_x,m_t,p_x,p_t used. 
-tau = 10^-10;
-
-%%% set reference test function parameters explicitly:
-m_x = 15;
-m_t = 15;
-p_x = 5;
-p_t = 5;
-
-%%% toggle rescale state variables and spatiotemporal coordinates
-toggle_scale = 2;
-
-%---------------- model library
-max_dx = 1;
-max_dt = 1;
-polys = [0:3];
-trigs = [];
-use_all_dt = 0;
-use_cross_dx = 0;
-custom_add = [];
-custom_remove = {@(mat) mat(:,3)>1};
+if ~use_presets
+    %---------------- weak discretization
+    %%% phi_class = 1 for piecewise polynomial test function, 2 for Gaussian
+    phi_class = 1;          
+    
+    %%% set convolution query point spacing:
+    s_x = 10;  %max(floor(length(xs_obs{1})/50),1);
+    s_t = 10;  %max(floor(length(xs_obs{end})/50),1);
+    
+    %%% set reference test function parameters using spectrum of data:
+    tauhat = 2;      %%% if tauhat<=0, explicit vals for m_x,m_t,p_x,p_t used. 
+    tau = 10^-10;
+    
+    %%% set reference test function parameters explicitly:
+    m_x = 30;
+    m_t = 30;
+    p_x = 9;
+    p_t = 5;
+    
+    %%% toggle rescale state variables and spatiotemporal coordinates
+    toggle_scale = 2;
+    
+    %---------------- model library
+    max_dx = 6; 
+    max_dt = 1;
+    polys = 1:6; 
+    trigs = [];
+    use_all_dt = 0;
+    use_cross_dx = 0;
+    custom_add = [];
+    custom_remove = {};{@(mat) mat(:,3)>1};
+end
 % lhs = [1 1 0 0 1];
 % true_nz_weights = {};
-
-%% set plots
-
-toggle_plot_basis_fcn = 0;
-toggle_plot_sol =  0;
-plotgap = 0;
-toggle_plot_loss = 1;
-toggle_plot_fft = 0;
 
 %% Build Linear System
 
@@ -130,11 +127,17 @@ gamma = 0;
 maxits = Inf;
 
 %%% sparsity_scale =  0 enforces sparsity on original data; = 1 enforces on rescaled data
-sparsity_scale = 0;             
+sparsity_scale = 0;
 
 [W,G,b,resid,dW,its_all,thrs_EL,M,lambda_hat,lossvals,ET_wsindy,tags_pde_G,lib_list_G] = wsindy_pde_solve(lambda,gamma,Theta_pdx,lhs_ind,axi,M_full,maxits,tags_pde,lib_list,sparsity_scale);
 
 %% Display results
+
+toggle_plot_basis_fcn = 0;
+toggle_plot_sol =  1;
+plotgap = 0;
+toggle_plot_loss = 1;
+toggle_plot_fft = 1;
 
 print_loc = 1;
 get_results;
