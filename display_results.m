@@ -1,12 +1,12 @@
 figind=0;
 % close all
-set(0,'DefaultFigurePosition',[4000 800 580 406])
+% set(0,'DefaultFigurePosition',[4000 800 580 406])
 
 %% plot basis fcn
 
 if toggle_plot_basis_fcn
     figind = figind +1;
-    figure(figind); 
+    figure(figind);clf
     pos=[];
     plot_basis_fcn(Cfs_x,Cfs_t,m_x,dx,m_t,dt,max_dx,max_dt,pdx_list,pos,scales(end-n:end));
 end
@@ -14,13 +14,14 @@ end
 %% plot data
 
 if toggle_plot_sol>0
+    figind = figind +1;
+    figure(figind);clf
     for jj=1:min(length(toggle_plot_sol),length(U_obs))
-        figind = figind +1;
-        figure(figind); 
+        subplot(min(length(toggle_plot_sol),length(U_obs)),1,jj)
         colormap(turbo(50))
         if dim==2
             surf(xs_obs{1},xs_obs{2},U_obs{min(toggle_plot_sol(jj),length(U_obs))}', 'EdgeColor','none')
-    %         view([0 90])       
+            view([10 80])       
             zlabel('$u$','interpreter','latex','fontsize',14)
             set(gca, 'TickLabelInterpreter','latex','fontsize',14)
             xlabel('$x$','interpreter','latex','fontsize',14)
@@ -31,17 +32,14 @@ if toggle_plot_sol>0
             title(['U(',num2str(min(toggle_plot_sol(jj),length(U_obs))),')'])
         elseif dim==3
             for j=1:plotgap:floor(length(xs_obs{3}))
-                for i=1:length(toggle_plot_sol)
-                    subplot(length(toggle_plot_sol),1,i)
-                    surf(1:length(xs_obs{1}),1:length(xs_obs{2}),squeeze(U_obs{min(toggle_plot_sol(jj),length(U_obs))}(:,:,j))', 'EdgeColor','none')
-                    xlabel('$x$','interpreter','latex','fontsize',14)
-                    ylabel('$y$','interpreter','latex','fontsize',14)            
-                    title(['U(',num2str(min(toggle_plot_sol(jj),length(U_obs))),')'])
-                    view([0 90])     
-                    title(num2str(xs_obs{3}(j)))
-                    colorbar
-                    caxis([min(reshape(U_obs{toggle_plot_sol(jj)},[],1)) max(reshape(U_obs{toggle_plot_sol(jj)},[],1))])
-                end
+                surf(1:length(xs_obs{1}),1:length(xs_obs{2}),squeeze(U_obs{min(toggle_plot_sol(jj),length(U_obs))}(:,:,j))', 'EdgeColor','none')
+                xlabel('$x$','interpreter','latex','fontsize',14)
+                ylabel('$y$','interpreter','latex','fontsize',14)            
+                title(['U(',num2str(min(toggle_plot_sol(jj),length(U_obs))),')'])
+                view([0 90])     
+                title(num2str(xs_obs{3}(j)))
+                colorbar
+                caxis([min(reshape(U_obs{toggle_plot_sol(jj)},[],1)) max(reshape(U_obs{toggle_plot_sol(jj)},[],1))])
                 drawnow
             end
         end
@@ -52,7 +50,7 @@ end
 
 if size(lossvals,2)>1 && toggle_plot_loss
     figind = figind +1;
-    figure(figind); 
+    figure(figind);clf
     loglog(lossvals(2,:),lossvals(1,:),'o-')
     xlabel('$\lambda$','interpreter','latex','fontsize',14)
     ylabel('$\mathcal{L}$','interpreter','latex','fontsize',14)
@@ -68,7 +66,7 @@ end
 if toggle_plot_fft>0
     Cfs = {{Cfs_x,Cfs_t}};
     figind = figind +1;
-    figure(figind)
+    figure(figind);clf
     coords=1:dim;
     for j=1:dim-1
         coords=[coords;circshift(coords(end,:),-1)];

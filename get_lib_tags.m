@@ -18,7 +18,7 @@ if and(~isempty(lib_list),~use_all_dt)
     lib_list = lib_list(or(~lib_list(:,end)>0,ismember(lib_list,lhs,'rows')),:);
 end
 
-lib_list = unique([lib_list;custom_add],'rows');
+lib_list = unique([lhs;lib_list;custom_add],'rows');
 
 inds = [];
 for i=1:length(custom_remove)
