@@ -50,13 +50,12 @@ coarsen_data = repmat([0 1 1],dim,1);
 
 coarsen_data(1:dim-1,:) = repmat([0 1 1],dim-1,1); 
 
-
 [xs_obs,U_obs] = subsamp(xs_obs,U_obs,coarsen_data,dims);
 dims = cellfun(@(x) length(x), xs_obs);
 
 %% Add noise
 
-sigma_NR = 0;
+sigma_NR = 0.25;
 noise_dist = 0; 
 noise_alg = 0;
 rng(1);
@@ -67,14 +66,12 @@ rng(rng_seed);
 
 %% Set hyperparameters 
 
-use_presets = 0;
+use_presets = 1;
+
 if ~use_presets
     %---------------- weak discretization
     %%% phi_class = 1 for piecewise polynomial test function, 2 for Gaussian
     phi_class = 1;
-
-    %%% set query point spacing by maximum row restriction
-    K_max = 5000;
 
     %%% set reference test function parameters using spectrum of data:
     tauhat = 2;      %%% if tauhat<=0, explicit vals for m_x,m_t,p_x,p_t used. 
@@ -94,8 +91,8 @@ if ~use_presets
     toggle_scale = 2;
     
     %---------------- model library
-    max_dx = 3+max(max(true_nz_weights{1}(:,n+1:n+dim-1))); 
-    polys = 0:3+max(max(true_nz_weights{1}(:,1:n)));
+    max_dx = 2 + max(max(true_nz_weights{1}(:,n+1:n+dim-1))); 
+    polys = 0:(2 + max(max(true_nz_weights{1}(:,1:n))));
     max_dt = max(lhs(:,end));
     trigs = 1:max(abs(reshape(imag(true_nz_weights{1}),[],1)));
     use_all_dt = 0;
@@ -103,8 +100,6 @@ if ~use_presets
     custom_add = [];
     custom_remove = {};%{@(mat) mat(:,3)>1};
 end
-% lhs = [1 1 0 0 1];
-% true_nz_weights = {};
 
 %% Build Linear System
 
@@ -119,6 +114,9 @@ end
 tols = [-p_x -p_t];
 
 %---------------- build linear system
+
+%%% set query point spacing by maximum row restriction
+K_max = 5000;
 if K_max>0
     s_x = max(ceil((length(xs_obs{1})-2*m_x)/K_max^(1/dim)),1);
     s_t = max(ceil((length(xs_obs{end})-2*m_t)/K_max^(1/dim)),1);

@@ -20,13 +20,20 @@ end
 
 lib_list = unique([lhs;lib_list;custom_add],'rows');
 
-inds = [];
-for i=1:length(custom_remove)
-    if isequal(class(custom_remove{i}),'function_handle')
-        inds = unique(find(all([custom_remove{i}(lib_list) ~ismember(lib_list,lhs,'rows')],2)));
-        lib_list = lib_list(~ismember(1:size(lib_list,1),inds),:);
-    elseif isequal(class(custom_remove{i}),'double')
-        lib_list = lib_list(~ismember(lib_list,custom_remove{i},'rows'),:);
+if isequal(class(custom_remove),'double')
+    if ~isempty(custom_remove)
+        lib_list = lib_list(~ismember(lib_list,custom_remove,'rows'),:);
+    end
+elseif isequal(class(custom_remove),'cell')
+    for i=1:length(custom_remove)
+        if isequal(class(custom_remove{i}),'function_handle')
+            inds = unique(find(all([custom_remove{i}(lib_list) ~ismember(lib_list,lhs,'rows')],2)));
+            lib_list = lib_list(~ismember(1:size(lib_list,1),inds),:);
+        elseif isequal(class(custom_remove{i}),'double')
+            if ~isempty(custom_remove{i})
+                lib_list = lib_list(~ismember(lib_list,custom_remove{i},'rows'),:);
+            end
+        end
     end
 end
 [tags_pde,lib_list] = build_str_tags(lib_list,dim,n);
