@@ -8,7 +8,12 @@ if toggle_plot_basis_fcn
     figind = figind +1;
     figure(figind);clf
     pos=[];
-    plot_basis_fcn(Cfs_x,Cfs_t,m_x,dx,m_t,dt,max_dx,max_dt,pdx_list,pos,scales(end-n:end));
+    if toggle_scale>0
+        sclz = scales(end-n:end);
+    else
+        sclz = [];
+    end
+    plot_basis_fcn(Cfs_x,Cfs_t,m_x,dx,m_t,dt,max_dx,max_dt,pdx_list,pos,sclz);
 end
 
 %% plot data

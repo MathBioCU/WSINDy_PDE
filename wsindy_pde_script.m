@@ -41,21 +41,21 @@ n = length(U_obs);
 
 %% Subsample data (if desired)
 
-coarsen_data = repmat([0 1 1],dim,1);
+coarsen_data = repmat([0 8 1],dim,1);
 
 %%% set row d of coarsen_data to [initial_frac inc final_frac] to subsample dth coordinate to 
 %%% start at index initial_frac*L, where L is the number of points in dth coordinate
 %%% end at index final_frac*L,
 %%% skip every inc gridpoint.
 
-coarsen_data(1:dim-1,:) = repmat([0 1 1],dim-1,1); 
+coarsen_data(1:dim-1,:) = repmat([0 8 1],dim-1,1); 
 
 [xs_obs,U_obs] = subsamp(xs_obs,U_obs,coarsen_data,dims);
 dims = cellfun(@(x) length(x), xs_obs);
 
 %% Add noise
 
-sigma_NR = 0.25;
+sigma_NR = 0;
 noise_dist = 0; 
 noise_alg = 0;
 rng(1);
@@ -66,7 +66,7 @@ rng(rng_seed);
 
 %% Set hyperparameters 
 
-use_presets = 1;
+use_presets = 0;
 
 if ~use_presets
     %---------------- weak discretization
@@ -105,7 +105,7 @@ end
 
 %---------------- find test function hyperparams using Fourier spectrum of U
 if tauhat > 0
-    tauhat_inds = 1;
+    tauhat_inds = min(find(lhs(1:n)));
     [m_x,m_t,p_x,p_t,sig_est,corners] = findcorners(cellfun(@(x) x.^1, U_obs(tauhat_inds), 'uni',0),xs_obs,tau,tauhat,max_dx,max_dt,phi_class);
 else
     m_x = min(m_x,floor((length(xs_obs{1})-1)/2));
